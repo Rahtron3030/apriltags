@@ -11,12 +11,32 @@ find_package(catkin REQUIRED COMPONENTS
   cmake_modules
   message_generation
   geometry_msgs
+  apriltags_swatbotics
 )
 find_package(OpenCV REQUIRED)
 find_package(Eigen REQUIRED)
 
 # apriltag cpp
-find_package(apriltagscpp REQUIRED)
+#apriltagscpp_INCLUDE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/..
+#apriltagscpp_LIBRARY:${CMAKE_SOURCE_DIR}/apriltags-cpp
+#include_directories(${CMAKE_SOURCE_DIR}/apriltags-cpp/src)
+#link_directories(${CMAKE_SOURCE_DIR}/apriltags-cpp/build)
+#set(CMAKE_MODULE_PATH "/home/rahtron/projectionomy/projection/catkin_ws/src/apriltags/apriltags-cpp;${CMAKE_MODULE_PATH}")
+#set(apriltagscpp_LIBRARY "/home/rahtron/projectionomy/projection/catkin_ws/src/apriltags/apriltags-cpp")
+#set(apriltagscpp_INCLUDE "/home/rahtron/projectionomy/projection/catkin_ws/src/apriltags/apriltags-cpp/src")
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/home/rahtron/projectionomy/projection/catkin_ws/src/apriltags/apriltags-cpp -I/home/rahtron/projectionomy/projection/catkin_ws/src/apriltags/apriltags-cpp/src")
+#LINK_DIRECTORIES(${CMAKE_SOURCE_DIR}/apriltags-cpp/build)
+#TARGET_LINK_LIBRARIES(apriltagscpp_LIBRARY ${CMAKE_SOURCE_DIR}/apriltags-cpp/build/libapriltags.a)
+
+#find_package(apriltagscpp REQUIRED)
+#set(apriltagscpp_DIR ${CMAKE_CURRENT_SOURCE_DIR}/apriltags-cpp)
+#add_subdirectory(${apriltagscpp_DIR}/build)
+#include_directories(${apriltagscpp_DIR}/src)
+#set(CMAKE_MODULE_PATH ${apriltagscpp_DIR})
+#add_library(apriltagscpp_LIBRARY
+#LINK_DIRECTORIES(${CMAKE_BINARY_DIR}/res)
+
 
 # Import the yaml-cpp libraries.
 include(FindPkgConfig)
@@ -59,15 +79,14 @@ add_executable(apriltags src/apriltags.cpp)
 target_link_libraries(apriltags ${catkin_LIBRARIES}
                                 ${Eigen_LIBRARIES}
                                 ${OpenCV_LIBRARIES}
-                                ${Yaml_LIBRARIES}    
+                                ${Yaml_LIBRARIES}
                                 ${apriltagscpp_LIBRARY})
 add_dependencies(apriltags ${PROJECT_NAME}_gencpp)
 
 install(TARGETS apriltags
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION} 
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 #install(FILES ${apriltagscpp_LIBRARY}
 #  DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #)
-

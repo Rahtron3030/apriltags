@@ -37,22 +37,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <opencv/highgui.h>
 #include <cv_bridge/cv_bridge.h>
 
-// #include <src/TagDetector.h>
+//#include <src/TagDetector.h>
 // #include <src/TagDetection.h>
 // #include <src/TagFamily.h>
 
-// #include "apriltagscpp/TagDetector.h"
-// #include "apriltagscpp/TagDetection.h"
-// #include "apriltagscpp/TagFamily.h"
+ //#include "apriltagscpp/TagDetector.h"
+ //#include "apriltagscpp/TagDetection.h"
+ //#include "apriltagscpp/TagFamily.h"
 
-#include "TagDetector.h"
-#include "TagDetection.h"
-#include "TagFamily.h"
+//#include "TagDetector.h"
+//#include "TagDetection.h"
+//#include "TagFamily.h"
 
-
-// #include <TagDetector.h>
-// #include <TagDetection.h>
-// #include <TagFamily.h>
+#include <apriltags_swatbotics/TagDetector.h>
+#include <apriltags_swatbotics/TagDetection.h>
+#include <apriltags_swatbotics/TagFamily.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -98,12 +97,12 @@ void GetMarkerTransformUsingOpenCV(const TagDetection& detection, Eigen::Matrix4
     std::vector<cv::Point3f> object_pts;
     std::vector<cv::Point2f> image_pts;
     double tag_radius = tag_size/2.;
-    
+
     object_pts.push_back(cv::Point3f(-tag_radius, -tag_radius, 0));
     object_pts.push_back(cv::Point3f( tag_radius, -tag_radius, 0));
     object_pts.push_back(cv::Point3f( tag_radius,  tag_radius, 0));
     object_pts.push_back(cv::Point3f(-tag_radius,  tag_radius, 0));
-    
+
     image_pts.push_back(detection.p[0]);
     image_pts.push_back(detection.p[1]);
     image_pts.push_back(detection.p[2]);
@@ -112,7 +111,7 @@ void GetMarkerTransformUsingOpenCV(const TagDetection& detection, Eigen::Matrix4
     cv::Matx33f intrinsics(camera_info_.K[0], 0, camera_info_.K[2],
                            0, camera_info_.K[4], camera_info_.K[5],
                            0, 0, 1);
-    
+
     cv::Vec4f distortion_coeff(camera_info_.D[0], camera_info_.D[1], camera_info_.D[2], camera_info_.D[3]);
 
     // Estimate 3D pose of tag
@@ -142,7 +141,7 @@ void GetMarkerTransformUsingOpenCV(const TagDetection& detection, Eigen::Matrix4
     T.col(3).head(3) <<
             tvec.at<double>(0), tvec.at<double>(1), tvec.at<double>(2);
     T.row(3) << 0,0,0,1;
-    
+
     transform = T;
 }
 
@@ -277,7 +276,7 @@ void ImageCallback(const sensor_msgs::ImageConstPtr& msg)
         ROS_ERROR("cv_bridge exception: %s", e.what());
         return;
     }
-    
+
     cv::Mat subscribed_gray = subscribed_ptr->image;
     cv::Point2d opticalCenter;
 
@@ -331,14 +330,14 @@ void ImageCallback(const sensor_msgs::ImageConstPtr& msg)
         cv::Mat rvec;
         cv::Mat tvec;
         GetMarkerTransformUsingOpenCV(detections[i], pose, rvec, tvec);
-        
+
         // Get this info from earlier code, don't extract it again
         Eigen::Matrix3d R = pose.block<3,3>(0,0);
         Eigen::Quaternion<double> q(R);
-        
+
         double tag_size = GetTagSize(detections[i].id);
         cout << tag_size << " " << detections[i].id << endl;
-        
+
         // Fill in MarkerArray msg
         visualization_msgs::Marker marker_transform;
         marker_transform.header.frame_id = msg->header.frame_id;
@@ -372,13 +371,13 @@ void ImageCallback(const sensor_msgs::ImageConstPtr& msg)
         marker_transform.pose.orientation.y = q.y();
         marker_transform.pose.orientation.z = q.z();
         marker_transform.pose.orientation.w = q.w();
-        
+
         marker_transform.color.r = 1.0;
         marker_transform.color.g = 0.0;
         marker_transform.color.b = 1.0;
         marker_transform.color.a = 1.0;
         marker_transforms.markers.push_back(marker_transform);
-        
+
         // Fill in AprilTag detection.
         apriltags::AprilTagDetection apriltag_det;
         apriltag_det.header = marker_transform.header;
@@ -477,7 +476,7 @@ void DisconnectCallback(const ros::SingleSubscriberPublisher& info)
     uint32_t subscribers = marker_publisher_.getNumSubscribers()
                            + apriltag_publisher_.getNumSubscribers();
     ROS_DEBUG("Unsubscription detected! (%d subscribers)", subscribers);
-    
+
     if(!subscribers && running_)
     {
         ROS_DEBUG("No Subscribers, Disconnecting from Input Image Topic.");
@@ -493,7 +492,7 @@ void GetParameterValues()
     node_->param("tag_family", tag_family_name_, DEFAULT_TAG_FAMILY);
     node_->param("default_tag_size", default_tag_size_, DEFAULT_TAG_SIZE);
     node_->param("display_type", display_type_, DEFAULT_DISPLAY_TYPE);
-    node_->param("marker_thickness", marker_thickness_, 0.01);
+    node_->param("marker_thickness", marker_thickness_, 0.001); //TODO Rahtron changed from 0.01
 
     node_->param("viewer", viewer_, false);
     node_->param("publish_detections_image", publish_detections_image_, false);
@@ -518,7 +517,7 @@ void GetParameterValues()
         XmlRpc::XmlRpcValue tag_values = it->second;
 
         // Load all the settings for this tag.
-        if (tag_values.hasMember("size")) 
+        if (tag_values.hasMember("size"))
         {
             tag_sizes_[tag_id] = static_cast<double>(tag_values["size"]);
             ROS_DEBUG("Setting tag%d to size %f m.", tag_id, tag_sizes_[tag_id]);
@@ -527,10 +526,10 @@ void GetParameterValues()
 }
 
 void SetupPublisher()
-{    
+{
     ros::SubscriberStatusCallback connect_callback = &ConnectCallback;
     ros::SubscriberStatusCallback disconnect_callback = &DisconnectCallback;
-    
+
     // Publisher
     marker_publisher_ = node_->advertise<visualization_msgs::MarkerArray>(
             DEFAULT_MARKER_TOPIC, 1, connect_callback,
